@@ -1,12 +1,17 @@
 from __future__ import annotations
 import tcod
 
-from actions import EscapeAction, MovementAction
+from engine import Engine 
 from input_handlers import EventHandler
+from entity import Entity
+from game_map import GameMap
 
 def main()->None:
     screen_width = 80
     screen_height = 50
+
+    map_width = 80
+    map_height = 45
 
     player_x = int(screen_width/2)
     player_y = int(screen_height/2) 
@@ -18,6 +23,13 @@ def main()->None:
 
     event_handler = EventHandler()
 
+    player = Entity(x=player_x, y=player_y, char="@" , color = (255 , 255 , 255))
+    npc = Entity(x=player_x, y=player_y, char="N" , color = (255 , 255 , 0))
+    entities = {player , npc}
+
+    game_map = GameMap(width=map_width , height=map_height)
+
+    engine = Engine(entities=entities , event_handler= event_handler ,game_map = game_map ,player=player)
 
     with tcod.context.new_terminal(
         columns = screen_width,
@@ -30,24 +42,13 @@ def main()->None:
         while True:
             
             root_console.clear()
-            
-            root_console.print(x=player_x, y=player_y, string="@")
 
-            context.present(root_console)
+            engine.render(console = root_console , context = context)
 
-            for event in tcod.event.wait():
-                
-                action = event_handler.dispatch(event)
-                
-                if action is None:
-                    continue
+            events = tcod.event.wait()
 
-                if isinstance(action , EscapeAction):
-                    raise SystemExit
-                
-                if isinstance(action , MovementAction):
-                    player_x += action.dx
-                    player_y += action.dy
+            engine.handle_events(events)
+
 
                 
 
